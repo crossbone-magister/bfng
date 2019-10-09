@@ -26,10 +26,11 @@ fn main() {
         let mut pointer_direction = Direction::Right;
         let mut pointer = (0 as i32,0 as i32);
         let mut stack: Vec<i32> = Vec::new();
-        loop {
+        let mut running = true;
+        while running {
             let command = source_matrix[pointer.0 as usize][pointer.1 as usize];
             match command {
-                '1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => stack.push(command.to_digit(10).unwrap().try_into().unwrap()),
+                '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => stack.push(command.to_digit(10).unwrap().try_into().unwrap()),
                 '+' => {
                     let a = stack.pop().unwrap();
                     let b = stack.pop().unwrap();
@@ -81,7 +82,7 @@ fn main() {
                '^' => {
                     pointer_direction = Direction::Up;
                 }
-               'V' => {
+               'v' => {
                     pointer_direction = Direction::Down;
                 },
                 '?' => {
@@ -136,22 +137,48 @@ fn main() {
 
                 },
                 '#' => {
-                    pointer = increase_pointer(pointer, &pointer_direction);
+                    pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
                 },
-                _ => println!("{}",command)
+                //'p' => {}, TODO impl PUT
+                //'g' => {}, TODO impl GET
+                //'&' => {}, TODO impl read number
+                //'~' => {}, TODO impl get char
+                '@' => {
+                    running = false;
+                },
+                ' ' => (),
+                _ => println!("Unknow command {}",command)
             }
-            pointer = increase_pointer(pointer, &pointer_direction);
+            pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
         }
     } else {
         println!("Plase specify source");
     }
 }
 
-fn increase_pointer(pointer: (i32,i32), direction: &Direction) -> (i32,i32){
+fn increase_pointer(pointer: (i32,i32), direction: &Direction, source: &Vec<Vec<char>>) -> (i32,i32) {
+    let rows = source.len() as i32;
+    let columns = source[pointer.0 as usize].len() as i32;
     match direction {
-                Direction::Right => (pointer.0, (pointer.1 +1) % 80),
-                Direction::Left => (pointer.0, 0.max(pointer.1 -1)),
-                Direction::Up => (0.max(pointer.0 -1), pointer.1),
-                Direction::Down => ((pointer.0 +1) % 25, pointer.1),
+                Direction::Right => (pointer.0, (pointer.1 +1) % columns),
+                Direction::Left => {
+                    let y;
+                    if pointer.1 == 0 {
+                        y = columns - 1;
+                    } else {
+                        y = 0.max(pointer.1 -1);
+                    }
+                    (pointer.0, y)
+                },
+                Direction::Up => {
+                    let x;
+                    if pointer.0 == 0 {
+                        x = rows - 1;
+                    } else {
+                        x = 0.max(pointer.0 -1);
+                    }
+                    (x, pointer.1)
+                },
+                Direction::Down => ((pointer.0 + 1) % rows, pointer.1),
             }
 }
