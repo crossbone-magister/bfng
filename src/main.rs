@@ -19,8 +19,8 @@ enum Direction {
 
 fn main() {
     if let Some(file_name) = env::args().nth(1) {
-        let mut source = BufReader::new(File::open(file_name).unwrap());
-        let source_matrix: Vec<Vec<char>> = source.lines()
+        let source = BufReader::new(File::open(file_name).unwrap());
+        let mut source_matrix: Vec<Vec<char>> = source.lines()
             .map(|line| line.unwrap().chars().collect()).collect();
         println!("{:?}", source_matrix);
         let mut pointer_direction = Direction::Right;
@@ -119,6 +119,7 @@ fn main() {
                 },
                 '\\' => {
                     let a = stack.pop().unwrap();
+
                     let b = stack.pop().unwrap();
                     stack.push(a);
                     stack.push(b);
@@ -139,15 +140,26 @@ fn main() {
                 '#' => {
                     pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
                 },
-                //'p' => {}, TODO impl PUT
-                //'g' => {}, TODO impl GET
+                'p' => {
+                    let y = stack.pop().unwrap() as usize;
+                    let x = stack.pop().unwrap() as usize;
+                    let v = stack.pop().unwrap() as u8;
+                   std::mem::replace(&mut source_matrix[x][y], v.into());
+                }, 
+                'g' => {
+                    let y = stack.pop().unwrap() as usize;
+                    let x = stack.pop().unwrap() as usize;
+                    let read_char = source_matrix[x][y];
+                    let numeric_value = read_char as i32;
+                    stack.push(numeric_value);
+                }, 
                 //'&' => {}, TODO impl read number
                 //'~' => {}, TODO impl get char
                 '@' => {
                     running = false;
                 },
                 ' ' => (),
-                _ => println!("Unknow command {}",command)
+                _ => println!("Unknown command '{}'",command)
             }
             pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
         }
