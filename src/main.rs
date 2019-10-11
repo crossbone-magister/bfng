@@ -27,139 +27,148 @@ fn main() {
         let mut pointer = (0 as i32,0 as i32);
         let mut stack: Vec<i32> = Vec::new();
         let mut running = true;
+        let mut string_mode = false;
         while running {
             let command = source_matrix[pointer.0 as usize][pointer.1 as usize];
-            match command {
-                '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => stack.push(command.to_digit(10).unwrap().try_into().unwrap()),
-                '+' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    stack.push(a + b);
-                },
-                '-' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    stack.push(b - a);
-                },
-                '*' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    stack.push(a * b);
-                },
-                '/' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    stack.push(b / a);
-                },
-                '%' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    stack.push(b % a);
-                },
-                '!' => {
-                    let a = stack.pop().unwrap();
-                    if a == 0 {
-                        stack.push(1);
-                    } else {
-                        stack.push(0);
-                    }
-                },
-                '`' => {
-                    let a = stack.pop().unwrap();
-                    let b = stack.pop().unwrap();
-                    if b > a {
-                        stack.push(1);
-                    } else {
-                        stack.push(0);
-                    }
-                },
-                '>' => {
-                    pointer_direction = Direction::Right;
-                }  
-                '<' => {
-                    pointer_direction = Direction::Left;
+            if string_mode {
+                match command {
+                    '"' => string_mode = false,
+                    _ => stack.push(command as i32)
+
                 }
-               '^' => {
-                    pointer_direction = Direction::Up;
-                }
-               'v' => {
-                    pointer_direction = Direction::Down;
-                },
-                '?' => {
-                    let new_direction = rand::thread_rng().gen_range(0,4);
-                    match new_direction {
-                        0 => pointer_direction = Direction::Right,
-                        1 => pointer_direction = Direction::Left,
-                        2 => pointer_direction = Direction::Up,
-                        3 => pointer_direction = Direction::Down,
-                        _ => panic!("Generated number out of range"),
-                    }
-                },
-                '_' => {
-                    let condition = stack.pop().unwrap();
-                    if condition == 0 {
+            } else {
+                match command {
+                    '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => stack.push(command.to_digit(10).unwrap().try_into().unwrap()),
+                    '+' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        stack.push(a + b);
+                    },
+                    '-' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        stack.push(b - a);
+                    },
+                    '*' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        stack.push(a * b);
+                    },
+                    '/' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        stack.push(b / a);
+                    },
+                    '%' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        stack.push(b % a);
+                    },
+                    '!' => {
+                        let a = stack.pop().unwrap();
+                        if a == 0 {
+                            stack.push(1);
+                        } else {
+                            stack.push(0);
+                        }
+                    },
+                    '`' => {
+                        let a = stack.pop().unwrap();
+                        let b = stack.pop().unwrap();
+                        if b > a {
+                            stack.push(1);
+                        } else {
+                            stack.push(0);
+                        }
+                    },
+                    '>' => {
                         pointer_direction = Direction::Right;
-                    } else {
+                    },  
+                    '<' => {
                         pointer_direction = Direction::Left;
-                    }
-                },
-                '|' => {
-                    let condition = stack.pop().unwrap();
-                    if condition == 0 {
-                        pointer_direction = Direction::Down;
-                    } else {
+                    },
+                   '^' => {
                         pointer_direction = Direction::Up;
-                    }
-                },
-                //'"' => {} TODO Handle string mode
-                ':' => {
-                    let value = stack.pop().unwrap();
-                    stack.push(value);
-                    stack.push(value);
-                },
-                '\\' => {
-                    let a = stack.pop().unwrap();
+                    },
+                   'v' => {
+                        pointer_direction = Direction::Down;
+                    },
+                    '?' => {
+                        let new_direction = rand::thread_rng().gen_range(0,4);
+                        match new_direction {
+                            0 => pointer_direction = Direction::Right,
+                            1 => pointer_direction = Direction::Left,
+                            2 => pointer_direction = Direction::Up,
+                            3 => pointer_direction = Direction::Down,
+                            _ => panic!("Generated number out of range"),
+                        }
+                    },
+                    '_' => {
+                        let condition = stack.pop().unwrap();
+                        if condition == 0 {
+                            pointer_direction = Direction::Right;
+                        } else {
+                            pointer_direction = Direction::Left;
+                        }
+                    },
+                    '|' => {
+                        let condition = stack.pop().unwrap();
+                        if condition == 0 {
+                            pointer_direction = Direction::Down;
+                        } else {
+                            pointer_direction = Direction::Up;
+                        }
+                    },
+                    '"' => string_mode = true, 
+                    ':' => {
+                        let value = stack.pop().unwrap();
+                        stack.push(value);
+                        stack.push(value);
+                    },
+                    '\\' => {
+                        let a = stack.pop().unwrap();
 
-                    let b = stack.pop().unwrap();
-                    stack.push(a);
-                    stack.push(b);
-                },
-                '$' => {
-                    let _value = stack.pop();
-                },
-                '.' => {
-                    let value = stack.pop().unwrap();
-                    println!("{} ", value);
-                },
-                ',' => {
-                    let value = stack.pop().unwrap();
-                    let character = std::char::from_u32(value.try_into().unwrap());
-                    println!("{}", character.unwrap());
+                        let b = stack.pop().unwrap();
+                        stack.push(a);
+                        stack.push(b);
+                    },
+                    '$' => {
+                        let _value = stack.pop();
+                    },
+                    '.' => {
+                        let value = stack.pop().unwrap();
+                        print!("{} ", value);
+                    },
+                    ',' => {
+                        let value = stack.pop().unwrap();
+                        let character = std::char::from_u32(value.try_into().unwrap());
+                        print!("{}", character.unwrap());
 
-                },
-                '#' => {
-                    pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
-                },
-                'p' => {
-                    let y = stack.pop().unwrap() as usize;
-                    let x = stack.pop().unwrap() as usize;
-                    let v = stack.pop().unwrap() as u8;
-                   std::mem::replace(&mut source_matrix[x][y], v.into());
-                }, 
-                'g' => {
-                    let y = stack.pop().unwrap() as usize;
-                    let x = stack.pop().unwrap() as usize;
-                    let read_char = source_matrix[x][y];
-                    let numeric_value = read_char as i32;
-                    stack.push(numeric_value);
-                }, 
-                //'&' => {}, TODO impl read number
-                //'~' => {}, TODO impl get char
-                '@' => {
-                    running = false;
-                },
-                ' ' => (),
-                _ => println!("Unknown command '{}'",command)
+                    },
+                    '#' => {
+                        pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
+                    },
+                    'p' => {
+                        let y = stack.pop().unwrap() as usize;
+                        let x = stack.pop().unwrap() as usize;
+                        let v = stack.pop().unwrap() as u8;
+                       std::mem::replace(&mut source_matrix[x][y], v.into());
+                    }, 
+                    'g' => {
+                        let y = stack.pop().unwrap() as usize;
+                        let x = stack.pop().unwrap() as usize;
+                        let read_char = source_matrix[x][y];
+                        let numeric_value = read_char as i32;
+                        stack.push(numeric_value);
+                    }, 
+                    //'&' => {}, TODO impl read number
+                    //'~' => {}, TODO impl get char
+                    '@' => {
+                        running = false;
+                    },
+                    ' ' => (),
+                    _ => println!("Unknown command '{}'",command)
+                }
             }
             pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
         }
