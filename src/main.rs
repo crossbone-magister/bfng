@@ -1,7 +1,7 @@
 use std::{
     env,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader,stdin,stdout,Write},
     convert::TryInto,
 };
 
@@ -138,12 +138,13 @@ fn main() {
                     '.' => {
                         let value = stack.pop().unwrap();
                         print!("{} ", value);
+                        stdout().flush().unwrap();
                     },
                     ',' => {
                         let value = stack.pop().unwrap();
                         let character = std::char::from_u32(value.try_into().unwrap());
                         print!("{}", character.unwrap());
-
+                        stdout().flush().unwrap();
                     },
                     '#' => {
                         pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
@@ -161,8 +162,18 @@ fn main() {
                         let numeric_value = read_char as i32;
                         stack.push(numeric_value);
                     }, 
-                    //'&' => {}, TODO impl read number
-                    //'~' => {}, TODO impl get char
+                    '&' => {
+                        let mut line = String::new();
+                        stdin().read_line(&mut line).unwrap();
+                        let read_char = line.chars().next().unwrap().to_digit(10).unwrap();
+                        stack.push(read_char.try_into().unwrap());
+                    },
+                    '~' => {
+                        let mut line = String::new();
+                        stdin().read_line(&mut line).unwrap();
+                        let read_char = line.chars().next().unwrap();
+                        stack.push(read_char as i32);
+                    },   
                     '@' => {
                         running = false;
                     },
