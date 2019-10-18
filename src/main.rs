@@ -165,7 +165,8 @@ fn main() {
                     '&' => {
                         let mut line = String::new();
                         stdin().read_line(&mut line).unwrap();
-                        let read_char = line.chars().next().unwrap().to_digit(10).unwrap();
+                        line.pop();
+                        let read_char = line.parse::<i32>().unwrap();
                         stack.push(read_char.try_into().unwrap());
                     },
                     '~' => {
