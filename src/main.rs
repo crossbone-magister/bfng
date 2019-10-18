@@ -40,32 +40,32 @@ fn main() {
                 match command {
                     '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9' => stack.push(command.to_digit(10).unwrap().try_into().unwrap()),
                     '+' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         stack.push(a + b);
                     },
                     '-' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         stack.push(b - a);
                     },
                     '*' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         stack.push(a * b);
                     },
                     '/' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         stack.push(b / a);
                     },
                     '%' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         stack.push(b % a);
                     },
                     '!' => {
-                        let a = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
                         if a == 0 {
                             stack.push(1);
                         } else {
@@ -73,8 +73,8 @@ fn main() {
                         }
                     },
                     '`' => {
-                        let a = stack.pop().unwrap();
-                        let b = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
+                        let b = pop_stack_value(&mut stack);
                         if b > a {
                             stack.push(1);
                         } else {
@@ -104,7 +104,7 @@ fn main() {
                         }
                     },
                     '_' => {
-                        let condition = stack.pop().unwrap();
+                        let condition = pop_stack_value(&mut stack);
                         if condition == 0 {
                             pointer_direction = Direction::Right;
                         } else {
@@ -112,7 +112,7 @@ fn main() {
                         }
                     },
                     '|' => {
-                        let condition = stack.pop().unwrap();
+                        let condition = pop_stack_value(&mut stack);
                         if condition == 0 {
                             pointer_direction = Direction::Down;
                         } else {
@@ -121,27 +121,27 @@ fn main() {
                     },
                     '"' => string_mode = true, 
                     ':' => {
-                        let value = stack.pop().unwrap();
+                        let value = pop_stack_value(&mut stack);
                         stack.push(value);
                         stack.push(value);
                     },
                     '\\' => {
-                        let a = stack.pop().unwrap();
+                        let a = pop_stack_value(&mut stack);
 
-                        let b = stack.pop().unwrap();
+                        let b = pop_stack_value(&mut stack);
                         stack.push(a);
                         stack.push(b);
                     },
                     '$' => {
-                        let _value = stack.pop();
+                        let _value = pop_stack_value(&mut stack);
                     },
                     '.' => {
-                        let value = stack.pop().unwrap();
+                        let value = pop_stack_value(&mut stack);
                         print!("{} ", value);
                         stdout().flush().unwrap();
                     },
                     ',' => {
-                        let value = stack.pop().unwrap();
+                        let value = pop_stack_value(&mut stack);
                         let character = std::char::from_u32(value.try_into().unwrap());
                         print!("{}", character.unwrap());
                         stdout().flush().unwrap();
@@ -150,14 +150,14 @@ fn main() {
                         pointer = increase_pointer(pointer, &pointer_direction, &source_matrix);
                     },
                     'p' => {
-                        let y = stack.pop().unwrap() as usize;
-                        let x = stack.pop().unwrap() as usize;
-                        let v = stack.pop().unwrap() as u8;
+                        let y = pop_stack_value(&mut stack) as usize;
+                        let x = pop_stack_value(&mut stack) as usize;
+                        let v = pop_stack_value(&mut stack) as u8;
                        std::mem::replace(&mut source_matrix[x][y], v.into());
                     }, 
                     'g' => {
-                        let y = stack.pop().unwrap() as usize;
-                        let x = stack.pop().unwrap() as usize;
+                        let y = pop_stack_value(&mut stack) as usize;
+                        let x = pop_stack_value(&mut stack) as usize;
                         let read_char = source_matrix[x][y];
                         let numeric_value = read_char as i32;
                         stack.push(numeric_value);
@@ -213,4 +213,13 @@ fn increase_pointer(pointer: (i32,i32), direction: &Direction, source: &Vec<Vec<
                 },
                 Direction::Down => ((pointer.0 + 1) % rows, pointer.1),
             }
+}
+
+
+fn pop_stack_value(stack: &mut Vec<i32>) -> i32 {
+    if let Some(value) = stack.pop() {
+        value
+    } else {
+        0
+    }
 }
