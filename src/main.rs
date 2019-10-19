@@ -20,8 +20,12 @@ enum Direction {
 fn main() {
     if let Some(file_name) = env::args().nth(1) {
         let source = BufReader::new(File::open(file_name).unwrap());
-        let mut source_matrix: Vec<Vec<char>> = source.lines()
-            .map(|line| line.unwrap().chars().collect()).collect();
+        let mut source_matrix = vec!(vec!(' '; 80); 25);
+        for (x, line) in source.lines().enumerate() {
+            for (y, command) in line.unwrap().chars().enumerate() {
+                    source_matrix[x][y] = command;
+            }
+        }
         println!("{:?}", source_matrix);
         let mut pointer_direction = Direction::Right;
         let mut pointer = (0 as i32,0 as i32);
