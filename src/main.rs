@@ -162,9 +162,13 @@ fn main() {
                     'g' => {
                         let y = pop_stack_value(&mut stack) as usize;
                         let x = pop_stack_value(&mut stack) as usize;
-                        let read_char = source_matrix[x][y];
-                        let numeric_value = read_char as i32;
-                        stack.push(numeric_value);
+                        if x < source_matrix.len() && y < source_matrix[x].len() {
+                            let read_char = source_matrix[x][y];
+                            let numeric_value = read_char as i32;
+                            stack.push(numeric_value);
+                        } else {
+                            stack.push(0);
+                        }
                     }, 
                     '&' => {
                         let mut line = String::new();
