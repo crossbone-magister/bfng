@@ -12,6 +12,7 @@ use pointer::*;
 mod stack;
 use rand::Rng;
 use stack::*;
+mod interpreter;
 
 fn main() {
     if let Some(file_name) = env::args().nth(1) {

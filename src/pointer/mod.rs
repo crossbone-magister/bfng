@@ -1,4 +1,4 @@
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Direction {
     Up,
     Down,
@@ -55,6 +55,10 @@ impl Pointer {
 
     pub fn coordinates(&self) -> (i32, i32) {
         (self.x, self.y)
+    }
+
+    pub fn direction(&self) -> Direction {
+        self.direction
     }
 }
 
@@ -161,5 +165,11 @@ mod tests {
         assert_eq!((24, 0), pointer.coordinates());
         pointer.increase();
         assert_eq!((0, 0), pointer.coordinates());
+    }
+
+    #[test]
+    fn direction() {
+        let pointer = new_pointer();
+        assert_eq!(Direction::Right, pointer.direction);
     }
 }
