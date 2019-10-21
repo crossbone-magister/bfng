@@ -497,6 +497,72 @@ mod tests {
     }
 
     #[test]
+    fn command_execution_horizontal_if_zero() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(0);
+        interpreter.command_execution('_');
+        assert_eq!(Direction::Right,interpreter.pointer.direction());
+    }
+
+    #[test]
+    fn command_execution_horizontal_if_not_zero() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(1);
+        interpreter.command_execution('_');
+        assert_eq!(Direction::Left,interpreter.pointer.direction());
+    }
+
+    #[test]
+    fn command_execution_vertical_if_zero() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(0);
+        interpreter.command_execution('|');
+        assert_eq!(Direction::Down,interpreter.pointer.direction());
+    }
+
+    #[test]
+    fn command_execution_vertical_if_not_zero() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(1);
+        interpreter.command_execution('|');
+        assert_eq!(Direction::Up,interpreter.pointer.direction());
+    }
+
+    #[test]
+    fn command_execution_string_mode() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('"');
+        assert!(interpreter.string_mode);
+    }
+
+    #[test]
+    fn command_execution_duplicate() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(2);
+        interpreter.command_execution(':');
+        assert_eq!(2,interpreter.stack.pop());
+        assert_eq!(2,interpreter.stack.pop());
+    }
+
+    #[test]
     #[should_panic]
     fn command_execution_unknown_command() {
         let mut source = String::from("@");
