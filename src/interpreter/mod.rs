@@ -1,11 +1,7 @@
 use crate::pointer::*;
 use crate::stack::*;
 use rand::Rng;
-use std::{
-    convert::TryInto,
-    io::{BufRead, BufReader, BufWriter, Write},
-    marker::PhantomData,
-};
+use std::{convert::TryInto, marker::PhantomData};
 
 #[derive(Debug)]
 pub struct Interpreter<S, I, O>
@@ -19,8 +15,8 @@ where
     stack: Stack,
     running: bool,
     string_mode: bool,
-    stdin: BufReader<I>,
-    stdout: BufWriter<O>,
+    stdin: I,
+    stdout: O,
     _marker: PhantomData<S>,
 }
 
@@ -30,7 +26,7 @@ where
     I: std::io::BufRead,
     O: std::io::Write,
 {
-    pub fn new(source: BufReader<S>, stdin: BufReader<I>, stdout: BufWriter<O>) -> Self {
+    pub fn new(source: S, stdin: I, stdout: O) -> Self {
         let mut source_matrix = vec![vec!(' '; 80); 25];
         for (x, line) in source.lines().enumerate() {
             for (y, command) in line.unwrap().chars().enumerate() {
@@ -183,12 +179,12 @@ where
             }
             '.' => {
                 let value = self.stack.pop();
-                print!("{} ", value);
+                write!(&mut self.stdout, "{} ", value).unwrap();
                 self.stdout.flush().unwrap();
             }
             ',' => {
                 let character = self.stack.pop_char();
-                print!("{}", character);
+                write!(&mut self.stdout, "{}", character).unwrap();
                 self.stdout.flush().unwrap();
             }
             '#' => {
@@ -237,17 +233,14 @@ where
 mod tests {
 
     use super::*;
+    use std::str;
 
     fn new_interpreter<'a>(
         source: &'a mut String,
         stdin: &'a mut String,
         stdout: &'a mut Vec<u8>,
     ) -> Interpreter<&'a [u8], &'a [u8], Vec<u8>> {
-        Interpreter::new(
-            BufReader::new(source.as_bytes()),
-            BufReader::new(stdin.as_bytes()),
-            BufWriter::new(stdout.to_vec()),
-        )
+        Interpreter::new(source.as_bytes(), stdin.as_bytes(), stdout.to_vec())
     }
 
     #[test]
@@ -504,7 +497,7 @@ mod tests {
         let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
         interpreter.stack.push(0);
         interpreter.command_execution('_');
-        assert_eq!(Direction::Right,interpreter.pointer.direction());
+        assert_eq!(Direction::Right, interpreter.pointer.direction());
     }
 
     #[test]
@@ -515,7 +508,7 @@ mod tests {
         let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
         interpreter.stack.push(1);
         interpreter.command_execution('_');
-        assert_eq!(Direction::Left,interpreter.pointer.direction());
+        assert_eq!(Direction::Left, interpreter.pointer.direction());
     }
 
     #[test]
@@ -526,7 +519,7 @@ mod tests {
         let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
         interpreter.stack.push(0);
         interpreter.command_execution('|');
-        assert_eq!(Direction::Down,interpreter.pointer.direction());
+        assert_eq!(Direction::Down, interpreter.pointer.direction());
     }
 
     #[test]
@@ -537,7 +530,7 @@ mod tests {
         let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
         interpreter.stack.push(1);
         interpreter.command_execution('|');
-        assert_eq!(Direction::Up,interpreter.pointer.direction());
+        assert_eq!(Direction::Up, interpreter.pointer.direction());
     }
 
     #[test]
@@ -558,8 +551,145 @@ mod tests {
         let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
         interpreter.stack.push(2);
         interpreter.command_execution(':');
-        assert_eq!(2,interpreter.stack.pop());
-        assert_eq!(2,interpreter.stack.pop());
+        assert_eq!(2, interpreter.stack.pop());
+        assert_eq!(2, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_swap() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(1);
+        interpreter.stack.push(2);
+        interpreter.command_execution('\\');
+        assert_eq!(1, interpreter.stack.pop());
+        assert_eq!(2, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_discard() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(1);
+        interpreter.command_execution('$');
+        assert_eq!(0, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_print_number() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('.');
+        println!("stdout contents: {:?}", stdout);
+        assert_eq!("1 ", str::from_utf8(&stdout).unwrap());
+    }
+
+    #[test]
+    fn command_execution_print_ascii() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(65);
+        interpreter.command_execution(',');
+        assert_eq!("A", str::from_utf8(&stdout).unwrap());
+    }
+
+    #[test]
+    fn command_execution_bridge() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('#');
+        assert_eq!((0, 1), interpreter.pointer.coordinates());
+    }
+
+    #[test]
+    fn command_execution_put() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(65);
+        interpreter.stack.push(0);
+        interpreter.stack.push(0);
+        interpreter.command_execution('p');
+        assert_eq!('A', interpreter.source_matrix[0][0]);
+    }
+
+    #[test]
+    fn command_execution_get() {
+        let mut source = String::from("A");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(0);
+        interpreter.stack.push(0);
+        interpreter.command_execution('g');
+        assert_eq!(65, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_get_out_of_bounds() {
+        let mut source = String::from("A");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.stack.push(100);
+        interpreter.stack.push(100);
+        interpreter.command_execution('g');
+        assert_eq!(0, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_read_number() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("123\n");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('&');
+        assert_eq!(123, interpreter.stack.pop());
+    }
+
+    #[test]
+    fn command_execution_read_character() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("I\n");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('~');
+        assert_eq!('I', interpreter.stack.pop_char());
+    }
+
+    #[test]
+    fn command_execution_end() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("I\n");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution('@');
+        assert!(!interpreter.running);
+        assert!(interpreter.program_ended());
+    }
+
+    #[test]
+    fn command_execution_nop() {
+        let mut source = String::from("@");
+        let mut stdin = String::from("");
+        let mut stdout = vec![];
+        let mut interpreter = new_interpreter(&mut source, &mut stdin, &mut stdout);
+        interpreter.command_execution(' ');
+        assert_eq!((0, 0), interpreter.pointer.coordinates());
+        assert_eq!(0, interpreter.stack.pop());
+        assert_eq!(Direction::Right, interpreter.pointer.direction());
+        assert_eq!('@', interpreter.source_matrix[0][0]);
     }
 
     #[test]

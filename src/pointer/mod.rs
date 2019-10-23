@@ -57,6 +57,7 @@ impl Pointer {
         (self.x, self.y)
     }
 
+    #[cfg(test)]
     pub fn direction(&self) -> Direction {
         self.direction
     }
